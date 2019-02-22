@@ -1,0 +1,3 @@
+# TODO
+1. remove unused functions
+2. https://github.com/space-station/study_iot_tb_demo_client

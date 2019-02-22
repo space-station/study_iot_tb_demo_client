@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="colorBackground">#1E90FF</color>
+    <color name="colorFontBlack">#030303</color>
+    <color name="colorFontWhite">#FFFFFF</color>
+    <color name="colorFontGrey">#E8E8E8</color>
+    <color name="colorFontDarkGery">#787878</color>
+    <color name="progress_end">#1E90FF</color>
+    <color name="progress_center">#1E90FF</color>
+    <color name="progress_start">#1E90FF</color>
+    <color name="progress_err">#fa0404</color>
+    <color name="progress_succ">#27d92d</color>
+</resources>

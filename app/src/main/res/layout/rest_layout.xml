@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Username:"
+            />
+
+        <EditText
+            android:id="@+id/username"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:textSize="15dp"
+            android:text="tenant@thingsboard.org"/>
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Password:"
+            />
+
+        <EditText
+            android:id="@+id/password"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:text="tenant"
+            android:textSize="15dp"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Server:"/>
+
+        <EditText
+            android:id="@+id/server"
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:text="http://192.168.4.119:8080/api/auth/login"
+            android:textSize="15dp"/>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/login_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Login"/>
+
+    <Button
+        android:id="@+id/create_device"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Create Device"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Device ID"/>
+        <EditText
+            android:id="@+id/device_id_edittext"
+            android:layout_width="290dp"
+            android:layout_height="wrap_content"
+            android:text="60d5c590-3355-11e9-8e91-9166618508f7"
+            android:textSize="15dp"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Request Body" />
+        <EditText
+            android:id="@+id/request_body_edittext"
+            android:layout_width="290dp"
+            android:layout_height="wrap_content"
+            android:textSize="15dp"
+            />
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/rpc_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Send RPC"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Response:"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginBottom="20dp"
+        android:background="@color/colorFontGrey">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp">
+
+            <TextView
+                android:id="@+id/response_info"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minLines="11"
+                android:padding="5dp"
+                android:textColor="@color/colorFontBlack"/>
+        </ScrollView>
+    </LinearLayout>
+
+</LinearLayout>

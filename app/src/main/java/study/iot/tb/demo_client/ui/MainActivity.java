@@ -105,9 +105,12 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
+        LocalBroadcastManager localBroadcastManager=LocalBroadcastManager.getInstance(this);
+
         IntentFilter filter = new IntentFilter();
         filter.addAction("MQTT_CONNECTION_MESSAGE");
-        registerReceiver(mReceiver, filter);
+        localBroadcastManager.registerReceiver(mReceiver,filter);
+        //registerReceiver(mReceiver, filter);
 
     }
 
@@ -144,7 +147,9 @@ public class MainActivity extends AppCompatActivity {
             unbindService(mServiceConnection);
             mIsServiceBinded = false;
         }
-        unregisterReceiver(mReceiver);
+        LocalBroadcastManager localBroadcastManager=LocalBroadcastManager.getInstance(this);
+        localBroadcastManager.unregisterReceiver(mReceiver);
+        //unregisterReceiver(mReceiver);
         super.onStop();
 
     }

@@ -1,15 +1,18 @@
 package study.iot.tb.demo_client.mqtt;
 
+import android.Manifest;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
+import study.iot.tb.demo_client.ui.MainActivity;
 import study.iot.tb.demo_client.util.CommonParams;
 
 public class MqttService extends Service {
@@ -152,7 +155,9 @@ public class MqttService extends Service {
             }
             Intent intent=new Intent("MQTT_CONNECTION_MESSAGE");
             intent.putExtra("status", event);
-            sendBroadcast(intent);
+            LocalBroadcastManager localBroadcastManager=LocalBroadcastManager.getInstance(getBaseContext());
+            localBroadcastManager.sendBroadcast(intent);
+            //sendBroadcast(intent);
         }
     };
 

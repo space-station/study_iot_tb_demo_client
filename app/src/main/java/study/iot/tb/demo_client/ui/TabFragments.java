@@ -1,11 +1,12 @@
 package study.iot.tb.demo_client.ui;
 
+import android.content.Intent;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 
 
 
-public class TabFragments extends Fragment {
+public abstract class TabFragments extends Fragment {
     private static String TAG="TabFragments";
     public static Fragment newInstance(String type){
         if(type.equals("Rest")){
@@ -18,6 +19,8 @@ public class TabFragments extends Fragment {
             return fragment;
         }
     }
+
+    public abstract void updateStatus(Intent intent);
 
 
 }

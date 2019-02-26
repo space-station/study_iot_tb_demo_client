@@ -1,9 +1,11 @@
 package study.iot.tb.demo_client.ui;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.view.ViewGroup;
 
 public class ContentPagerAdapter extends FragmentPagerAdapter {
 
@@ -11,6 +13,14 @@ public class ContentPagerAdapter extends FragmentPagerAdapter {
 
     private RestFragment restFragment;
     private MqttFragment mqttFragment;
+    private Fragment mCurrentFragment;
+
+    @Override
+    public void setPrimaryItem(@NonNull ViewGroup container, int position, @NonNull Object object) {
+        mCurrentFragment = (Fragment) object;
+        super.setPrimaryItem(container, position, object);
+
+    }
 
     public ContentPagerAdapter(FragmentManager fm , Context context)
     {
@@ -32,9 +42,6 @@ public class ContentPagerAdapter extends FragmentPagerAdapter {
             case 1:
                 type = "Mqtt";
                 break;
-            case 2:
-                type = "Result";
-                break;
             default:
                 type = "Rest";
                 break;
@@ -44,7 +51,7 @@ public class ContentPagerAdapter extends FragmentPagerAdapter {
 
     @Override
     public int getCount() {
-        return 3;
+        return 2;
     }
 
     @Override
@@ -55,11 +62,13 @@ public class ContentPagerAdapter extends FragmentPagerAdapter {
                 return "Rest";
             case 1:
                 return "Mqtt";
-            case 2:
-                return "Result";
             default:
                 return "Rest";
         }
+    }
+
+    public Fragment getCurrentFragment() {
+        return mCurrentFragment;
     }
 
 

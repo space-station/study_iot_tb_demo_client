@@ -26,7 +26,7 @@ import study.iot.tb.demo_client.mqtt.MqttUtil;
 import static android.content.Context.MODE_PRIVATE;
 import study.iot.tb.demo_client.R;
 
-public class MqttFragment extends Fragment {
+public class MqttFragment extends TabFragments {
 
     private static final String TAG = "MqttFragment";
     private EditText mDeviceid_edittext;
@@ -54,7 +54,7 @@ public class MqttFragment extends Fragment {
     private int Qos;
     private String status;
     public MqttUtil mqttUtil;
-    public MqttService mqttService;
+    public MqttService mService;
     private boolean mIsServiceBinded = false;
     private boolean mIsServiceConnected = false;
     private boolean mIsMqttConnected = false;
@@ -62,90 +62,7 @@ public class MqttFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        mIsServiceBinded = this.getContext().bindService(new Intent(getActivity(), MqttService.class), mServiceConnection,
-                Context.BIND_AUTO_CREATE);
-
-        if (!mIsServiceBinded) {
-            Log.e(TAG, "MqttFragment, cannot bind service");
-            return;
-        }
-
-        if (null == mqttService) {
-            //getActivity().finish();
-            Log.d(TAG, "MqttFragment mService is null===onStart");
-        }
-
-        final BroadcastReceiver mReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent){
-                    Log.i(TAG, "onReceive: ++++++++++++++++++++++");
-                    int event=intent.getIntExtra("status",10);
-                    switch (event) {
-                        case MqttUtil.MQTT_CONNECTED:
-                            mResponse_textview.setText("mqtt connect succ");
-                            mIsMqttConnected=true;
-                            break;
-                        case MqttUtil.MQTT_CONNECTING:
-                            break;
-                        case MqttUtil.MQTT_CONNECTFAIL:
-                            mResponse_textview.setText("mqtt connect failed");
-                            break;
-                        case MqttUtil.MQTT_DISCONNECT:
-                            mResponse_textview.setText("mqtt disconnect!!!");
-                            break;
-                        case MqttUtil.MQTT_PUBLISHED:
-                            mResponse_textview.setText("mqtt published succ");
-                            break;
-                        case MqttUtil.MQTT_PUBLISHFAIL:
-                            mResponse_textview.setText("mqtt published fail");
-                            break;
-                        case MqttUtil.MQTT_SUBSCRIBED:
-                            mResponse_textview.setText("mqtt subscribed");
-                            break;
-                        case MqttUtil.MQTT_SUBSCRIBEFAIL:
-                            mResponse_textview.setText("mqtt subscribed failed");
-                            break;
-                        case MqttUtil.MQTT_MSG:
-                            String type= "type:"+intent.getStringExtra("type_info");
-                            String msg= "message:"+intent.getStringExtra("data_info");
-                            mResponse_textview.setText(type+"\n"+msg);
-                        default:
-                            break;
-                    }
-            }
-        };
-
-        IntentFilter filter=new IntentFilter();
-        filter.addAction("MQTT_CONNECTION_MESSAGE");
-        getActivity().registerReceiver(mReceiver,filter);
     }
-
-
-    private final ServiceConnection mServiceConnection = new ServiceConnection() {
-        /**
-         * called by system when bind service
-         */
-        @Override
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            Log.d(TAG,"enter in ===onServiceConnected()===");
-            mIsServiceConnected = true;
-            mqttService = ((MqttService.ServiceBinder) service).getService();
-            if (null == mqttService) {
-                Log.e(TAG, "onServiceConnected, mService is null. Going to finsh.");
-                //getActivity().finish();
-                return;
-            }
-        }
-
-        /**
-         * When unbind service will call this method
-         */
-        @Override
-        public void onServiceDisconnected(ComponentName className) {
-            mIsServiceConnected = false;
-        }
-    };
-
 
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
@@ -171,13 +88,10 @@ public class MqttFragment extends Fragment {
         mDeviceid_edittext.setText(mDeviceId);
         mUsername_edittext.setText(mDeivceToken);
         mPassword_edittext.setText("");
-        mqttService = ((MainActivity) getActivity()).mqttService;
+        mService = ((MainActivity) getActivity()).mqttService;
         String data1="{ \"key\":\"ca_application\",\"value\":\"{\\\"lon\\\":123" +
                 ",\\\"lat\\\":456"+"}\"}";
         mPublishPayload_edittext.setText(data1);
-
-        Intent intent = new Intent(getActivity(), MqttService.class);
-        getActivity().startService(intent);
 
 
         radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
@@ -187,7 +101,7 @@ public class MqttFragment extends Fragment {
             }
         });
 
-//        mqttService = ((MqttService.ServiceBinder) service).getService();
+
 
         mConnect_button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -253,8 +167,13 @@ public class MqttFragment extends Fragment {
             status="pls input DeviceID and Username";
         }
         else{
-            mqttService.initMqtt(mDeviceId,mDeivceToken,mPassword,mServerAddress);
-            mqttService.mqttConnect();
+            if (mService == null) {
+                Log.i(TAG, "mqttConnect: mService is null");
+                return;
+            } else {
+                mService.initMqtt(mDeviceId, mDeivceToken, mPassword, mServerAddress);
+                mService.mqttConnect();
+            }
         }
 
     }
@@ -277,24 +196,64 @@ public class MqttFragment extends Fragment {
                 Qos = 1;
                 break;
         }
-        Log.i(TAG, "Qos====== "+Qos);
-        mqttService.mqttPublish(mPublishTopic,mPublishPayload,Qos);
+        Log.i(TAG, "Qos====== " + Qos);
+        if (mService == null) {
+            Log.i(TAG, "mqttPublish: mService is null");
+            return;
+        } else {
+            mService.mqttPublish(mPublishTopic, mPublishPayload, Qos);
+        }
     }
-    private void mqttSubscribe(){
+
+    private void mqttSubscribe() {
         Log.i(TAG, "mqttSubscribe: ");
-        mSubscribeTopic=String.valueOf(mSubscribeTopic_edittext.getText());
-        mqttService.mqttSubscribe(mSubscribeTopic);
+        mSubscribeTopic = String.valueOf(mSubscribeTopic_edittext.getText());
+        if (mService == null) {
+            Log.i(TAG, "mqttSubscribe: mService is null");
+            return;
+        } else {
+            mService.mqttSubscribe(mSubscribeTopic);
+        }
         //mqttUtil.subscribe(mSubscribeTopic);
     }
 
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-        getContext().unbindService(mServiceConnection);
+    public void updateStatus(Intent intent) {
+        Log.i(TAG, "updateStatus: Mqtt-------------------");
+        int event = intent.getIntExtra("status", 10);
+        switch (event) {
+            case MqttUtil.MQTT_CONNECTED:
+                mResponse_textview.setText("mqtt connect succ");
+                mIsMqttConnected = true;
+                break;
+            case MqttUtil.MQTT_CONNECTING:
+                break;
+            case MqttUtil.MQTT_CONNECTFAIL:
+                mResponse_textview.setText("mqtt connect failed");
+                break;
+            case MqttUtil.MQTT_DISCONNECT:
+                mResponse_textview.setText("mqtt disconnect!!!");
+                break;
+            case MqttUtil.MQTT_PUBLISHED:
+                mResponse_textview.setText("mqtt published succ");
+                break;
+            case MqttUtil.MQTT_PUBLISHFAIL:
+                mResponse_textview.setText("mqtt published fail");
+                break;
+            case MqttUtil.MQTT_SUBSCRIBED:
+                mResponse_textview.setText("mqtt subscribed");
+                break;
+            case MqttUtil.MQTT_SUBSCRIBEFAIL:
+                mResponse_textview.setText("mqtt subscribed failed");
+                break;
+            case MqttUtil.MQTT_MSG:
+                String type = "type:" + intent.getStringExtra("type_info");
+                String msg = "message:" + intent.getStringExtra("data_info");
+                mResponse_textview.setText(type + "\n" + msg);
+            default:
+                break;
+        }
 
     }
-
-
-
 }

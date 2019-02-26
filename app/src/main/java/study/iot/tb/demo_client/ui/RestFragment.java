@@ -1,5 +1,6 @@
 package study.iot.tb.demo_client.ui;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -299,7 +300,9 @@ public class RestFragment extends TabFragments {
     }
 
 
-
-
+    @Override
+    public void updateStatus(Intent intent) {
+        Log.i(TAG, "updateStatus: Rest+++++++++");
+    }
 }
 

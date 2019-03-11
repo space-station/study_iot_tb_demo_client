@@ -1,5 +1,5 @@
 
-package study.iot.tb.demo_client.mqtt;
+package study.iot.tb.demo_client.util;
 
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 

@@ -21,7 +21,7 @@
         </activity>
 
         <service
-            android:name=".mqtt.MqttService"
+            android:name=".service.DemoService"
             android:enabled="true"
             android:exported="true" />
 

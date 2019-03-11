@@ -23,7 +23,7 @@ import android.util.Log;
 import java.util.List;
 
 import study.iot.tb.demo_client.R;
-import study.iot.tb.demo_client.mqtt.MqttService;
+import study.iot.tb.demo_client.service.DemoService;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -31,9 +31,9 @@ public class MainActivity extends AppCompatActivity {
     private TabLayout myTab;
     private ViewPager mViewPager;
 
-    private ContentPagerAdapter contentAdapter;
+    public ContentPagerAdapter contentAdapter;
     private String TAG = "MainActivity";
-    public MqttService mqttService;
+    public DemoService demoService;
     public boolean mIsServiceBinded = false;
     private boolean mIsServiceConnected = false;
     public BroadcastReceiver mReceiver;
@@ -48,8 +48,9 @@ public class MainActivity extends AppCompatActivity {
                     String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
         }
         initView();
-        Intent intent = new Intent(this, MqttService.class);
+        Intent intent = new Intent(this, DemoService.class);
         startService(intent);
+
 
     }
 
@@ -72,22 +73,21 @@ public class MainActivity extends AppCompatActivity {
         contentAdapter = new ContentPagerAdapter(getSupportFragmentManager());
         mViewPager.setAdapter(contentAdapter);
 
-
     }
 
     protected void onStart() {
         super.onStart();
-        mIsServiceBinded = bindService(new Intent(this, MqttService.class), mServiceConnection,
+        mIsServiceBinded = bindService(new Intent(this, DemoService.class), mServiceConnection,
                 Context.BIND_AUTO_CREATE);
 
         if (!mIsServiceBinded) {
-            Log.e(TAG, "onStart, cannot bind Mqtt service");
+            Log.e(TAG, "onStart, cannot bind demo service");
             finish();
             return;
         }
 
-        if (null == mqttService) {
-            Log.d(TAG, "mqttService is null===onStart");
+        if (null == demoService) {
+            Log.d(TAG, "demoService is null===onStart");
         }
 
         mReceiver = new BroadcastReceiver() {
@@ -106,9 +106,9 @@ public class MainActivity extends AppCompatActivity {
         };
 
         LocalBroadcastManager localBroadcastManager=LocalBroadcastManager.getInstance(this);
-
         IntentFilter filter = new IntentFilter();
         filter.addAction("MQTT_CONNECTION_MESSAGE");
+        filter.addAction("HTTP_CONNECTION_MESSAGE");
         localBroadcastManager.registerReceiver(mReceiver,filter);
         //registerReceiver(mReceiver, filter);
 
@@ -124,9 +124,9 @@ public class MainActivity extends AppCompatActivity {
         public void onServiceConnected(ComponentName className, IBinder service) {
             Log.d(TAG, "enter in ===onServiceConnected()===");
             mIsServiceConnected = true;
-            mqttService = ((MqttService.ServiceBinder) service).getService();
-            if (null == mqttService) {
-                Log.e(TAG, "onServiceConnected, mqttService is null. Going to finsh.");
+            demoService = ((DemoService.ServiceBinder) service).getService();
+            if (null == demoService) {
+                Log.e(TAG, "onServiceConnected, demoService is null. Going to finsh.");
                 finish();
                 return;
             }
@@ -140,9 +140,9 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-
     @Override
     public void onStop() {
+        Log.i(TAG, "enter in func onStop");
         if (mIsServiceBinded) {
             unbindService(mServiceConnection);
             mIsServiceBinded = false;

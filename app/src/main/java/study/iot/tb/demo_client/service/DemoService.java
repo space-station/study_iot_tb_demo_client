@@ -1,23 +1,29 @@
-package study.iot.tb.demo_client.mqtt;
+package study.iot.tb.demo_client.service;
 
-import android.Manifest;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.IBinder;
+import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.springframework.web.client.RestClientException;
+import org.thingsboard.server.common.data.Device;
 
-import study.iot.tb.demo_client.ui.MainActivity;
+import study.iot.tb.demo_client.rest.TbRestClient;
+import study.iot.tb.demo_client.util.MsgHandler;
+import study.iot.tb.demo_client.mqtt.MqttUtil;
 import study.iot.tb.demo_client.util.CommonParams;
 
-public class MqttService extends Service {
 
-    private String TAG="MqttService";
+public class DemoService extends Service {
+
+    private String TAG="DemoService";
     public MqttUtil mqttUtil;
     public String mDeviceId;
     public String mDeivceToken;
@@ -25,10 +31,16 @@ public class MqttService extends Service {
     private String mPassword;
     private Context mContext;
     public String data_info;
+    public String mLoginToken;
+    public String mTokenInfo;
+    public String response;
     private volatile CommonParams.mqttConnectStatus mqttIsConnect = CommonParams.mqttConnectStatus.CONNECT_NONE;
     private CommonParams.msgStatus pubStatus = CommonParams.msgStatus.PUBLISH_NONE;
     private int m_connectTimes = 0;
     private final IBinder mBinder = new ServiceBinder();
+
+    private TbRestClient tbRestClient;
+    private Device device;
 
     @Nullable
     @Override
@@ -48,7 +60,7 @@ public class MqttService extends Service {
             Log.i(TAG, "initMqtt: kkkkkkkkkkkkkkkkk" + mqttUtil);
         }
         mqttUtil.initMqtt(mDeviceId,mDeivceToken,mPassword,mServerAddress);
-        mqttUtil.addListener(msgHandler);
+        mqttUtil.addListener(msgHandler_mqtt);
     }
 
 
@@ -71,9 +83,9 @@ public class MqttService extends Service {
     }
 
     public class ServiceBinder extends Binder {
-        public MqttService getService() {
+        public DemoService getService() {
 
-            return MqttService.this;
+            return DemoService.this;
         }
     }
 
@@ -84,10 +96,15 @@ public class MqttService extends Service {
     }
 
     public int onStartCommand(Intent intent, int flags, int startId) {
+        //httpUtil=new HttpUtil(mContext);
+        tbRestClient=new TbRestClient(mContext);
         mqttUtil = new MqttUtil(mContext);
-        Log.i(TAG, "onStartCommand: init mqttUtil" + mqttUtil);
+        Log.i(TAG, "onStartCommand: init Util");
         if(mqttUtil==null){
-            Log.i(TAG, "onStartCommand: kkkkkkkkkkkkkkkkkkkk");
+            Log.i(TAG, "onStartCommand: mqttUtil is null");
+        }
+        if(tbRestClient==null){
+            Log.i(TAG, "onStartCommand: tbRestClient is null");
         }
         return super.onStartCommand(intent, flags, startId);
     }
@@ -104,7 +121,50 @@ public class MqttService extends Service {
         super.onDestroy();
     }
 
-    private MsgHandler msgHandler = new MsgHandler() {
+    private MsgHandler msgHandler_rest = new MsgHandler() {
+        @Override
+        public void onMessage(String type, MqttMessage data) {
+//            data_info=data.toString();
+//            Intent intent=new Intent("MQTT_CONNECTION_MESSAGE");
+//            intent.putExtra("type_info", type);
+//            intent.putExtra("data_info", data_info);
+//            intent.putExtra("status", MqttUtil.MQTT_MSG);
+//            sendBroadcast(intent);
+        }
+
+        @Override
+        public void onEvent(int event) {
+            Intent intent=new Intent("HTTP_CONNECTION_MESSAGE");
+            switch (event) {
+                case TbRestClient.HTTP_LOGINOK:
+                    Log.i(TAG, "http connect sucess");
+                    mLoginToken=tbRestClient.getToken();
+                    saveData("login_token",mLoginToken);
+                    Log.i(TAG, "onEvent:logintoken========"+mLoginToken);
+                    intent.putExtra("login_token",mLoginToken);
+                    break;
+                case TbRestClient.HTTP_UNAUTHORIZED:
+                    Log.i(TAG, "login info error");
+                    break;
+                case TbRestClient.HTTP_LOGINFAILED:
+                    Log.i(TAG, "http connect failed");
+                    break;
+                case TbRestClient.HTTP_NO_TOKEN:
+                    Log.i(TAG, "no token");
+                    break;
+                case TbRestClient.HTTP_EXIST_DEVICE:
+                    Log.i(TAG, "device exist");
+                    break;
+                default:
+                    break;
+            }
+            intent.putExtra("status", event);
+            LocalBroadcastManager localBroadcastManager=LocalBroadcastManager.getInstance(getBaseContext());
+            localBroadcastManager.sendBroadcast(intent);
+        }
+    };
+
+    private MsgHandler msgHandler_mqtt = new MsgHandler() {
         @Override
         public void onMessage(String type, MqttMessage data) {
             data_info=data.toString();
@@ -157,9 +217,46 @@ public class MqttService extends Service {
             intent.putExtra("status", event);
             LocalBroadcastManager localBroadcastManager=LocalBroadcastManager.getInstance(getBaseContext());
             localBroadcastManager.sendBroadcast(intent);
-            //sendBroadcast(intent);
         }
     };
+
+    public String logIn(String username,String password,String server_address){
+        //httpUtil.addListener(msgHandler);
+        //mLoginToken=httpUtil.doLogin(username,password,server_address);
+        tbRestClient.addListener(msgHandler_rest);
+        tbRestClient.login(username,password,server_address);
+        //mLoginToken=tbRestClient.getToken();
+        Log.i(TAG, "logIn:Login successfully:LoginToken= "+mLoginToken);
+        return mLoginToken;
+    }
+
+    public void saveData(String key,String data){
+        SharedPreferences.Editor editor = getSharedPreferences("deviceInfo", MODE_PRIVATE).edit();
+        editor.putString(key, data);
+        editor.commit();
+    }
+
+    public void createDevice(String server_address){
+        SharedPreferences token_info = getSharedPreferences("tokenInfo", MODE_PRIVATE);
+        mLoginToken=token_info.getString("login_token", "");
+        //String link_address= server_address.substring(0,25)+"/api/device";
+        String name = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
+        device = tbRestClient.createDevice(name,"default",server_address);
+        if(device!=null){
+            mDeviceId= String.valueOf(device.getId());
+            saveData("device_id",mDeviceId);
+            mDeivceToken= String.valueOf(tbRestClient.getCredentials(device.getId()).getCredentialsId());
+            saveData("device_token",mDeivceToken);
+            Intent intent=new Intent("HTTP_CONNECTION_MESSAGE");
+            intent.putExtra("status", TbRestClient.HTTP_CREATEOK);
+            intent.putExtra("deviceId",mDeviceId);
+            Log.i(TAG, "createDevice: ============"+mDeviceId+"token="+mDeivceToken);
+            intent.putExtra("device_token",mDeivceToken);
+            LocalBroadcastManager localBroadcastManager=LocalBroadcastManager.getInstance(getBaseContext());
+            localBroadcastManager.sendBroadcast(intent);
+        }
+    }
+
 
 }
 

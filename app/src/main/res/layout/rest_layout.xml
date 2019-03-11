@@ -57,7 +57,7 @@
             android:id="@+id/server"
             android:layout_width="300dp"
             android:layout_height="wrap_content"
-            android:text="http://192.168.4.119:8080/api/auth/login"
+            android:text="http://192.168.4.119:8080"
             android:textSize="15dp"/>
     </LinearLayout>
 
@@ -86,7 +86,7 @@
             android:id="@+id/device_id_edittext"
             android:layout_width="290dp"
             android:layout_height="wrap_content"
-            android:text="60d5c590-3355-11e9-8e91-9166618508f7"
+            android:text=""
             android:textSize="15dp"/>
 
     </LinearLayout>

@@ -16,13 +16,37 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    compileOptions {
+        sourceCompatibility 1.8
+        targetCompatibility 1.8
+    }
+    packagingOptions {
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/notice.txt'
+    }
 }
+
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.android.support:appcompat-v7:28.0.0'
     implementation 'com.android.support:design:28.0.0'
     testImplementation 'junit:junit:4.12'
+    implementation 'com.squareup.okhttp3:okhttp:3.4.1'
+    implementation 'com.squareup.okio:okio:1.13.0'
+    implementation files('libs/org.eclipse.paho.client.mqttv3-1.1.0.jar')
+    implementation files('libs/slf4j-api-1.7.26.jar')
+    implementation files('libs/log4j-over-slf4j-1.7.26.jar')
+    implementation files('libs/jul-to-slf4j-1.7.26.jar')
+    implementation 'com.google.protobuf:protobuf-lite:3.0.0'
+    implementation files('libs/org.eclipse.paho.android.service-1.1.1.jar')
+    implementation files('libs/spring-android-rest-template-2.0.0.M3.jar')
+    implementation files('libs/spring-android-core-2.0.0.M3.jar')
+    implementation files('libs/data-2.2.0.jar')
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.8'
+
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 }
+
+

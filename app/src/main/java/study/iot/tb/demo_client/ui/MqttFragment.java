@@ -1,15 +1,8 @@
 package study.iot.tb.demo_client.ui;
 
-import android.content.BroadcastReceiver;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.IBinder;
-import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,7 +13,8 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
-import study.iot.tb.demo_client.mqtt.MqttService;
+import study.iot.tb.demo_client.service.DemoService;
+
 import study.iot.tb.demo_client.mqtt.MqttUtil;
 
 import static android.content.Context.MODE_PRIVATE;
@@ -54,7 +48,7 @@ public class MqttFragment extends TabFragments {
     private int Qos;
     private String status;
     public MqttUtil mqttUtil;
-    public MqttService mService;
+    public DemoService mService;
     private boolean mIsServiceBinded = false;
     private boolean mIsServiceConnected = false;
     private boolean mIsMqttConnected = false;
@@ -63,6 +57,8 @@ public class MqttFragment extends TabFragments {
     public void onStart() {
         super.onStart();
     }
+
+
 
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
@@ -88,7 +84,7 @@ public class MqttFragment extends TabFragments {
         mDeviceid_edittext.setText(mDeviceId);
         mUsername_edittext.setText(mDeivceToken);
         mPassword_edittext.setText("");
-        mService = ((MainActivity) getActivity()).mqttService;
+        mService = ((MainActivity) getActivity()).demoService;
         String data1="{ \"key\":\"ca_application\",\"value\":\"{\\\"lon\\\":123" +
                 ",\\\"lat\\\":456"+"}\"}";
         mPublishPayload_edittext.setText(data1);
@@ -109,7 +105,12 @@ public class MqttFragment extends TabFragments {
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
+                            DemoService service = getService();
+                            if(service == null){
+                                Log.i(TAG, "run: nulllllllll");
+                            } else {
                             mqttConnect();
+                            }
                         }
                     }).start();
                 }
@@ -255,5 +256,11 @@ public class MqttFragment extends TabFragments {
                 break;
         }
 
+    }
+    public DemoService getService(){
+        if (mService == null) {
+            mService = ((MainActivity) getActivity()).demoService;
+        }
+        return mService;
     }
 }

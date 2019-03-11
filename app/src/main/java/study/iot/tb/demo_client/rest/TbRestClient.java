@@ -37,6 +37,8 @@ import java.util.Optional;
 import java.util.function.Supplier;
 //import javax.xml.transform.stax.*;
 
+import javax.security.auth.login.LoginException;
+
 import study.iot.tb.demo_client.util.MsgHandler;
 
 public class TbRestClient implements ClientHttpRequestInterceptor{
@@ -267,8 +269,10 @@ public class TbRestClient implements ClientHttpRequestInterceptor{
         return execution.execute(wrapper, bytes);
     }
     public void dispachEvent(int event) {
+        Log.i(TAG, "dispachEvent listenerList size " + listenerList.size());
         for (MsgHandler msgHandler : listenerList)
         {
+            Log.i(TAG, "dispatchEvent event " + event);
             msgHandler.onEvent(event);
         }
     }

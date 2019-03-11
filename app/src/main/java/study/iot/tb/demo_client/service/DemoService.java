@@ -60,7 +60,6 @@ public class DemoService extends Service {
             Log.i(TAG, "initMqtt: kkkkkkkkkkkkkkkkk" + mqttUtil);
         }
         mqttUtil.initMqtt(mDeviceId,mDeivceToken,mPassword,mServerAddress);
-        mqttUtil.addListener(msgHandler_mqtt);
     }
 
 
@@ -98,7 +97,9 @@ public class DemoService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         //httpUtil=new HttpUtil(mContext);
         tbRestClient=new TbRestClient(mContext);
+        tbRestClient.addListener(msgHandler_rest);
         mqttUtil = new MqttUtil(mContext);
+        mqttUtil.addListener(msgHandler_mqtt);
         Log.i(TAG, "onStartCommand: init Util");
         if(mqttUtil==null){
             Log.i(TAG, "onStartCommand: mqttUtil is null");
@@ -135,6 +136,7 @@ public class DemoService extends Service {
         @Override
         public void onEvent(int event) {
             Intent intent=new Intent("HTTP_CONNECTION_MESSAGE");
+            Log.i(TAG, "onEvent event " + event);
             switch (event) {
                 case TbRestClient.HTTP_LOGINOK:
                     Log.i(TAG, "http connect sucess");
@@ -223,7 +225,6 @@ public class DemoService extends Service {
     public String logIn(String username,String password,String server_address){
         //httpUtil.addListener(msgHandler);
         //mLoginToken=httpUtil.doLogin(username,password,server_address);
-        tbRestClient.addListener(msgHandler_rest);
         tbRestClient.login(username,password,server_address);
         //mLoginToken=tbRestClient.getToken();
         Log.i(TAG, "logIn:Login successfully:LoginToken= "+mLoginToken);

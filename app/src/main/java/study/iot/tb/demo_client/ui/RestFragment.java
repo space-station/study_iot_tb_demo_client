@@ -91,8 +91,6 @@ public class RestFragment extends TabFragments {
     }
 
 
-
-
     @Override
     public void updateStatus(Intent intent) {
         Log.i(TAG, "updateStatus: Rest+++++++++");
@@ -113,6 +111,7 @@ public class RestFragment extends TabFragments {
                 break;
             case TbRestClient.HTTP_CREATEOK:
                 mResponse_textView.setText("create device succ,deviceId="+intent.getStringExtra("deviceId"));
+
                 break;
             case TbRestClient.HTTP_EXIST_DEVICE:
                 mResponse_textView.setText("device exist");

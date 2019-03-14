@@ -59,7 +59,17 @@ public class MqttFragment extends TabFragments {
     }
 
 
-
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+        if (isVisibleToUser) {
+            SharedPreferences token_info = this.getContext().getSharedPreferences("deviceInfo", MODE_PRIVATE);
+            mDeviceId= token_info.getString("device_id","");
+            mDeivceToken=token_info.getString("device_token", "");
+            mDeviceid_edittext.setText(mDeviceId);
+            mUsername_edittext.setText(mDeivceToken);
+        }
+    }
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
         View view= inflater.inflate(R.layout.mqtt_layout,container,false);

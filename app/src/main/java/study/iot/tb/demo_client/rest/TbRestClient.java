@@ -12,6 +12,17 @@ import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.support.HttpRequestWrapper;
+import org.springframework.http.converter.ByteArrayHttpMessageConverter;
+import org.springframework.http.converter.FormHttpMessageConverter;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.ResourceHttpMessageConverter;
+import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.http.converter.json.GsonHttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.support.AllEncompassingFormHttpMessageConverter;
+import org.springframework.http.converter.xml.SimpleXmlHttpMessageConverter;
+import org.springframework.http.converter.xml.SourceHttpMessageConverter;
+import org.springframework.util.ClassUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -32,6 +43,7 @@ import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -56,10 +68,48 @@ public class TbRestClient implements ClientHttpRequestInterceptor{
     public static final int HTTP_EXIST_DEVICE = 1009;
     private ArrayList<MsgHandler> listenerList = new ArrayList<MsgHandler>();
 
+    public class LoginToken {
+
+        private String token;
+
+        public String getToken() {
+            return token;
+        }
+
+        public String setToken(String token) {
+            this.token = token;
+            return token;
+        }
+    }
+
+    private List<HttpMessageConverter<?>> getHttpMessageConverter() {
+        final boolean javaxXmlTransformPresent = ClassUtils.isPresent("javax.xml.transform.Source", this.getClass().getClassLoader());
+        final boolean simpleXmlPresent = ClassUtils.isPresent("org.simpleframework.xml.Serializer", this.getClass().getClassLoader());
+        final boolean gsonPresent = ClassUtils.isPresent("com.google.gson.Gson", this.getClass().getClassLoader());
+        List<HttpMessageConverter<?>> messageConverters = new ArrayList<>();
+        messageConverters.add(new ByteArrayHttpMessageConverter());
+        messageConverters.add(new StringHttpMessageConverter());
+        messageConverters.add(new ResourceHttpMessageConverter());
+        if (javaxXmlTransformPresent) {
+            messageConverters.add(new SourceHttpMessageConverter());
+            messageConverters.add(new AllEncompassingFormHttpMessageConverter());
+        } else {
+            messageConverters.add(new FormHttpMessageConverter());
+        }
+
+        if (simpleXmlPresent) {
+            messageConverters.add(new SimpleXmlHttpMessageConverter());
+        }
+
+        if (gsonPresent) {
+            messageConverters.add(new GsonHttpMessageConverter());
+        }
+        return messageConverters;
+    }
 
     public TbRestClient(Context context) {
 
-        restTemplate = new RestTemplate();
+        restTemplate = new RestTemplate(getHttpMessageConverter());
         mContext = context;
     }
     public void login(String username, String password,String server_address){
@@ -67,11 +117,15 @@ public class TbRestClient implements ClientHttpRequestInterceptor{
         Map<String, String> loginRequest = new HashMap<>();
         loginRequest.put("username", username);
         loginRequest.put("password", password);
-        ResponseEntity<JsonNode> tokenInfo = null;
-        tokenInfo = restTemplate.postForEntity(baseURL + "/api/auth/login", loginRequest, JsonNode.class);
+        //ResponseEntity<JsonNode> tokenInfo = null;
+
+        //tokenInfo = restTemplate.postForEntity(baseURL + "/api/auth/login", loginRequest, JsonNode.class);
+        ResponseEntity<LoginToken> tokenInfo = restTemplate.postForEntity(baseURL + "/api/auth/login", loginRequest, LoginToken.class);
         HttpStatus responseCode= tokenInfo.getStatusCode();
         if(responseCode== HttpStatus.OK){
-            this.token = tokenInfo.getBody().get("token").asText();
+            //this.token = responseEntity.getBody().get("token").asText();
+            //Log.i(TAG, " login ok event title " + responseEntity.getBody()[0].getTitle() + " event id " + responseEntity.getBody()[0].getId());
+            this.token = tokenInfo.getBody().getToken();
             dispachEvent(HTTP_LOGINOK);
         }
         else if(responseCode==HttpStatus.UNAUTHORIZED){
@@ -135,7 +189,7 @@ public class TbRestClient implements ClientHttpRequestInterceptor{
         params.put("clientKeys", clientKeys);
         params.put("sharedKeys", sharedKeys);
         try {
-            ResponseEntity<JsonNode> telemetryEntity = restTemplate.getForEntity(baseURL + "/api/v1/{accessToken}/attributes?clientKeys={clientKeys}&sharedKeys={sharedKeys}", JsonNode.class, params);
+            // ResponseEntity<JsonNode> telemetryEntity = restTemplate.getForEntity(baseURL + "/api/v1/{accessToken}/attributes?clientKeys={clientKeys}&sharedKeys={sharedKeys}", JsonNode.class, params);
             //return Optional.of(telemetryEntity.getBody());
         } catch (HttpClientErrorException exception) {
             if (exception.getStatusCode() == HttpStatus.NOT_FOUND) {
@@ -180,10 +234,10 @@ public class TbRestClient implements ClientHttpRequestInterceptor{
                 return null;
             }
         }
-        Log.i(TAG, "createDevice: "+deviceInfo);
+        //Log.i(TAG, "createDevice: "+deviceInfo);
         HttpStatus responseCode = deviceInfo.getStatusCode();
         if (responseCode == HttpStatus.OK) {
-            Log.i(TAG, "createDevice: ======+"+ deviceInfo.getBody());
+            //Log.i(TAG, "createDevice: ======+"+ deviceInfo.getBody());
             dispachEvent(HTTP_CREATEOK);
             return deviceInfo.getBody();
         }

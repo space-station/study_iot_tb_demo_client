@@ -21,6 +21,8 @@ public class RestFragment extends TabFragments {
     private EditText mServer_address_editText;
     private EditText mDevice_id_editText;
     private EditText mRequest_body_editText;
+    private EditText mDeviceName_editText;
+    private EditText mDeviceType_editText;
     private TextView mResponse_textView;
     private Button mLogin_button;
     private Button mCreateDevice_button;
@@ -32,8 +34,8 @@ public class RestFragment extends TabFragments {
     private String mUsername;
     private String mPassword;
     private String mServer_address;
-    public static final int UPDATE_TOKEN=1;
-    public static final int UPDATE_RESPONSE=2;
+    private String mDeviceName;
+    private String mDeviceType;
     public DemoService mService;
 
     public View onCreateView(LayoutInflater inflater,ViewGroup container,Bundle savedInstanceState){
@@ -45,6 +47,8 @@ public class RestFragment extends TabFragments {
         mCreateDevice_button=view.findViewById(R.id.create_device);
         mResponse_textView = view.findViewById(R.id.response_info);
         mDevice_id_editText=view.findViewById(R.id.device_id_edittext);
+        mDeviceName_editText=view.findViewById(R.id.device_name_edittext);
+        mDeviceType_editText=view.findViewById(R.id.type_edittext);
         mRequest_body_editText=view.findViewById(R.id.request_body_edittext);
         String data1="{ \"Date\":\"today\",\"Time\":\"{\\\"Hour\\\":12" +
                 ",\\\"Minutes\\\":56"+"}\"}";
@@ -52,6 +56,7 @@ public class RestFragment extends TabFragments {
         mUsername= String.valueOf(mUsername_editText.getText());
         mPassword= String.valueOf(mPassword_editText.getText());
         mServer_address=String.valueOf(mServer_address_editText.getText());
+
         ContentPagerAdapter contentAdapter = ((MainActivity) getActivity()).contentAdapter;
         Log.i(TAG, "onCreateView: "+mService);
 
@@ -81,7 +86,9 @@ public class RestFragment extends TabFragments {
                     public void run() {
                         DemoService service = getService();
                         if (service != null) {
-                            mService.createDevice(mServer_address);
+                            mDeviceName=String.valueOf(mDeviceName_editText.getText());
+                            mDeviceType=String.valueOf(mDeviceType_editText.getText());
+                            mService.createDevice(mDeviceName,mDeviceType,mServer_address);
                         }
                     }
                 }).start();

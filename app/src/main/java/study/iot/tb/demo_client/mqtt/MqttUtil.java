@@ -237,9 +237,9 @@ public class MqttUtil {
         ConnectivityManager connectivityManager = (ConnectivityManager) mContext
                 .getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo info = connectivityManager.getActiveNetworkInfo();
-        if (info != null && info.isAvailable()) {
-            String name = info.getTypeName();
-            Log.i(TAG, "current network name：" + name);
+        if (info != null ) {
+            //String name = info.getTypeName();
+            //Log.i(TAG, "current network name：" + name);
             return true;
         } else {
             Log.i(TAG, "no network is available");

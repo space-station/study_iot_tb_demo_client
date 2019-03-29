@@ -3,7 +3,7 @@ package study.iot.tb.demo_client.rest;
 import android.content.Context;
 import android.util.Log;
 
-import com.fasterxml.jackson.databind.JsonNode;
+//import com.fasterxml.jackson.databind.JsonNode;
 //import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
@@ -18,7 +18,7 @@ import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.ResourceHttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.http.converter.json.GsonHttpMessageConverter;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+//import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.http.converter.support.AllEncompassingFormHttpMessageConverter;
 import org.springframework.http.converter.xml.SimpleXmlHttpMessageConverter;
 import org.springframework.http.converter.xml.SourceHttpMessageConverter;
@@ -26,19 +26,27 @@ import org.springframework.util.ClassUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-import org.thingsboard.server.common.data.Customer;
-import org.thingsboard.server.common.data.Device;
-import org.thingsboard.server.common.data.alarm.Alarm;
-import org.thingsboard.server.common.data.asset.Asset;
-import org.thingsboard.server.common.data.id.AssetId;
-import org.thingsboard.server.common.data.id.CustomerId;
-import org.thingsboard.server.common.data.id.DeviceId;
-import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.data.relation.EntityRelation;
-import org.thingsboard.server.common.data.security.DeviceCredentials;
-import org.thingsboard.server.common.data.security.DeviceCredentialsType;
-
+//import org.thingsboard.server.common.data.Customer;
+//import org.thingsboard.server.common.data.Device;
+//import org.thingsboard.server.common.data.HasCustomerId;
+//import org.thingsboard.server.common.data.HasName;
+//import org.thingsboard.server.common.data.HasTenantId;
+//import org.thingsboard.server.common.data.alarm.Alarm;
+//import org.thingsboard.server.common.data.asset.Asset;
+//import org.thingsboard.server.common.data.id.AssetId;
+//import org.thingsboard.server.common.data.id.CustomerId;
+//import org.thingsboard.server.common.data.id.DeviceId;
+//import org.thingsboard.server.common.data.id.EntityId;
+//import org.thingsboard.server.common.data.id.TenantId;
+//import org.thingsboard.server.common.data.relation.EntityRelation;
+//import org.thingsboard.server.common.data.security.DeviceCredentials;
+//import org.thingsboard.server.common.data.security.DeviceCredentialsType;
+import study.iot.tb.demo_client.data.Device;
+import study.iot.tb.demo_client.data.DeviceId;
+import study.iot.tb.demo_client.data.DeviceCredentials;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -157,7 +165,7 @@ public class TbRestClient implements ClientHttpRequestInterceptor{
         Map<String, String> params = new HashMap<String, String>();
         params.put("customerTitle", title);
         try {
-            ResponseEntity<Customer> customerEntity = restTemplate.getForEntity(baseURL + "/api/tenant/customers?customerTitle={customerTitle}", Customer.class, params);
+            //ResponseEntity<Customer> customerEntity = restTemplate.getForEntity(baseURL + "/api/tenant/customers?customerTitle={customerTitle}", Customer.class, params);
             //return Optional.of(customerEntity.getBody());
         } catch (HttpClientErrorException exception) {
             if (exception.getStatusCode() == HttpStatus.NOT_FOUND) {
@@ -172,7 +180,7 @@ public class TbRestClient implements ClientHttpRequestInterceptor{
         Map<String, String> params = new HashMap<String, String>();
         params.put("assetName", name);
         try {
-            ResponseEntity<Asset> assetEntity = restTemplate.getForEntity(baseURL + "/api/tenant/assets?assetName={assetName}", Asset.class, params);
+            //ResponseEntity<Asset> assetEntity = restTemplate.getForEntity(baseURL + "/api/tenant/assets?assetName={assetName}", Asset.class, params);
             //return Optional.of(assetEntity.getBody());
         } catch (HttpClientErrorException exception) {
             if (exception.getStatusCode() == HttpStatus.NOT_FOUND) {
@@ -200,21 +208,22 @@ public class TbRestClient implements ClientHttpRequestInterceptor{
         }
     }
 
-    public Customer createCustomer(Customer customer) {
-        return restTemplate.postForEntity(baseURL + "/api/customer", customer, Customer.class).getBody();
-    }
+//    public Customer createCustomer(Customer customer) {
+//        return restTemplate.postForEntity(baseURL + "/api/customer", customer, Customer.class).getBody();
+//    }
 
-    public Customer createCustomer(String title) {
-        Customer customer = new Customer();
-        customer.setTitle(title);
-        return restTemplate.postForEntity(baseURL + "/api/customer", customer, Customer.class).getBody();
-    }
+//    public Customer createCustomer(String title) {
+//        Customer customer = new Customer();
+//        customer.setTitle(title);
+//        return restTemplate.postForEntity(baseURL + "/api/customer", customer, Customer.class).getBody();
+//    }
 
-    public Device createDevice(String name, String type,String server_address) {
+    public Device createDevice(Device device,String server_address) {
         baseURL = server_address;
-        Device device = new Device();
-        device.setName(name);
-        device.setType(type);
+//        Device device = new Device(name,type);
+        //Device device = new Device();
+//        device.setName(name);
+//        device.setType(type);
         ResponseEntity<Device> deviceInfo = null;
         try {
             deviceInfo = restTemplate.postForEntity(baseURL + "/api/device", device, Device.class);
@@ -223,7 +232,7 @@ public class TbRestClient implements ClientHttpRequestInterceptor{
             HttpStatus errorCode=e.getStatusCode();
             if (errorCode == HttpStatus.BAD_REQUEST) {
                 dispachEvent(HTTP_EXIST_DEVICE);
-                Log.i(TAG, "createDevice: Device already exist!");
+                Log.i(TAG, "createDevice: DeviceId already exist!");
                 return null;
             } else if (errorCode == HttpStatus.UNAUTHORIZED) {
                 dispachEvent(HTTP_NO_TOKEN);
@@ -234,78 +243,78 @@ public class TbRestClient implements ClientHttpRequestInterceptor{
                 return null;
             }
         }
-        //Log.i(TAG, "createDevice: "+deviceInfo);
         HttpStatus responseCode = deviceInfo.getStatusCode();
         if (responseCode == HttpStatus.OK) {
-            //Log.i(TAG, "createDevice: ======+"+ deviceInfo.getBody());
+            Log.i(TAG, "createDevice: ======+"+ deviceInfo.getBody().getId().getId());
             dispachEvent(HTTP_CREATEOK);
             return deviceInfo.getBody();
         }
         return null;
     }
 
-    public DeviceCredentials updateDeviceCredentials(DeviceId deviceId, String token) {
-        DeviceCredentials deviceCredentials = getCredentials(deviceId);
-        deviceCredentials.setCredentialsType(DeviceCredentialsType.ACCESS_TOKEN);
-        deviceCredentials.setCredentialsId(token);
-        return saveDeviceCredentials(deviceCredentials);
-    }
+//    public DeviceCredentials updateDeviceCredentials(DeviceId deviceId, String token) {
+//        DeviceCredentials deviceCredentials = getCredentials(deviceId);
+//        deviceCredentials.setCredentialsType(DeviceCredentialsType.ACCESS_TOKEN);
+//        deviceCredentials.setCredentialsId(token);
+//        return saveDeviceCredentials(deviceCredentials);
+//    }
 
-    public DeviceCredentials saveDeviceCredentials(DeviceCredentials deviceCredentials) {
-        return restTemplate.postForEntity(baseURL + "/api/device/credentials", deviceCredentials, DeviceCredentials.class).getBody();
-    }
+//    public DeviceCredentials saveDeviceCredentials(DeviceCredentials deviceCredentials) {
+//        return restTemplate.postForEntity(baseURL + "/api/device/credentials", deviceCredentials, DeviceCredentials.class).getBody();
+//    }
 
     public Device createDevice(Device device) {
         return restTemplate.postForEntity(baseURL + "/api/device", device, Device.class).getBody();
     }
 
-    public Asset createAsset(Asset asset) {
-        return restTemplate.postForEntity(baseURL + "/api/asset", asset, Asset.class).getBody();
-    }
+//    public Asset createAsset(Asset asset) {
+//        return restTemplate.postForEntity(baseURL + "/api/asset", asset, Asset.class).getBody();
+//    }
 
-    public Asset createAsset(String name, String type) {
-        Asset asset = new Asset();
-        asset.setName(name);
-        asset.setType(type);
-        return restTemplate.postForEntity(baseURL + "/api/asset", asset, Asset.class).getBody();
-    }
+//    public Asset createAsset(String name, String type) {
+//        Asset asset = new Asset();
+//        asset.setName(name);
+//        asset.setType(type);
+//        return restTemplate.postForEntity(baseURL + "/api/asset", asset, Asset.class).getBody();
+//    }
 
-    public Alarm createAlarm(Alarm alarm) {
-        return restTemplate.postForEntity(baseURL + "/api/alarm", alarm, Alarm.class).getBody();
-    }
+//    public Alarm createAlarm(Alarm alarm) {
+//        return restTemplate.postForEntity(baseURL + "/api/alarm", alarm, Alarm.class).getBody();
+//    }
 
-    public void deleteCustomer(CustomerId customerId) {
-        restTemplate.delete(baseURL + "/api/customer/{customerId}", customerId);
-    }
+//    public void deleteCustomer(CustomerId customerId) {
+//        restTemplate.delete(baseURL + "/api/customer/{customerId}", customerId);
+//    }
 
     public void deleteDevice(DeviceId deviceId) {
         restTemplate.delete(baseURL + "/api/device/{deviceId}", deviceId);
     }
 
-    public void deleteAsset(AssetId assetId) {
-        restTemplate.delete(baseURL + "/api/asset/{assetId}", assetId);
-    }
+//    public void deleteAsset(AssetId assetId) {
+//        restTemplate.delete(baseURL + "/api/asset/{assetId}", assetId);
+//    }
 
-    public Device assignDevice(CustomerId customerId, DeviceId deviceId) {
-        return restTemplate.postForEntity(baseURL + "/api/customer/{customerId}/device/{deviceId}", null, Device.class,
-                customerId.toString(), deviceId.toString()).getBody();
-    }
+//    public Device assignDevice(CustomerId customerId, DeviceId deviceId) {
+//        return restTemplate.postForEntity(baseURL + "/api/customer/{customerId}/device/{deviceId}", null, Device.class,
+//                customerId.toString(), deviceId.toString()).getBody();
+//    }
 
-    public Asset assignAsset(CustomerId customerId, AssetId assetId) {
-        return restTemplate.postForEntity(baseURL + "/api/customer/{customerId}/asset/{assetId}", null, Asset.class,
-                customerId.toString(), assetId.toString()).getBody();
-    }
+//    public Asset assignAsset(CustomerId customerId, AssetId assetId) {
+//        return restTemplate.postForEntity(baseURL + "/api/customer/{customerId}/asset/{assetId}", null, Asset.class,
+//                customerId.toString(), assetId.toString()).getBody();
+//    }
 
-    public EntityRelation makeRelation(String relationType, EntityId idFrom, EntityId idTo) {
-        EntityRelation relation = new EntityRelation();
-        relation.setFrom(idFrom);
-        relation.setTo(idTo);
-        relation.setType(relationType);
-        return restTemplate.postForEntity(baseURL + "/api/relation", relation, EntityRelation.class).getBody();
-    }
+//    public EntityRelation makeRelation(String relationType, EntityId idFrom, EntityId idTo) {
+//        EntityRelation relation = new EntityRelation();
+//        relation.setFrom(idFrom);
+//        relation.setTo(idTo);
+//        relation.setType(relationType);
+//        return restTemplate.postForEntity(baseURL + "/api/relation", relation, EntityRelation.class).getBody();
+//    }
 
-    public DeviceCredentials getCredentials(DeviceId id) {
-        return restTemplate.getForEntity(baseURL + "/api/device/" + id.getId().toString() + "/credentials", DeviceCredentials.class).getBody();
+    public DeviceCredentials getCredentials(String id) {
+//        return restTemplate.getForEntity(baseURL + "/api/device/" + id.getId().toString() + "/credentials", DeviceCredentials.class).getBody();
+        return restTemplate.getForEntity(baseURL + "/api/device/" + id + "/credentials", DeviceCredentials.class).getBody();
     }
 
     public RestTemplate getRestTemplate() {
@@ -336,5 +345,6 @@ public class TbRestClient implements ClientHttpRequestInterceptor{
             listenerList.add(msgHandler);
         }
     }
+
 
 }

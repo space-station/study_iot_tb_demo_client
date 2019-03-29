@@ -13,8 +13,8 @@ import android.util.Log;
 
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.springframework.web.client.RestClientException;
-import org.thingsboard.server.common.data.Device;
-
+//import org.thingsboard.server.common.data.Device;
+import study.iot.tb.demo_client.data.Device;
 import study.iot.tb.demo_client.rest.TbRestClient;
 import study.iot.tb.demo_client.util.MsgHandler;
 import study.iot.tb.demo_client.mqtt.MqttUtil;
@@ -237,16 +237,22 @@ public class DemoService extends Service {
         editor.commit();
     }
 
-    public void createDevice(String server_address){
+    public void createDevice(String name, String type,String server_address){
         SharedPreferences token_info = getSharedPreferences("tokenInfo", MODE_PRIVATE);
         mLoginToken=token_info.getString("login_token", "");
         //String link_address= server_address.substring(0,25)+"/api/device";
-        String name = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
-        device = tbRestClient.createDevice(name,"default",server_address);
+        if(name==""){
+            name = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
+        }
+        Log.i(TAG, "name=="+name);
+        Log.i(TAG, "type=="+type);
+        device=new Device(name,type);
+        device = tbRestClient.createDevice(device,server_address);
         if(device!=null){
-            mDeviceId= String.valueOf(device.getId());
+            mDeviceId= String.valueOf(device.getId().getId());
+            Log.i(TAG, "device_id===="+mDeviceId);
             saveData("device_id",mDeviceId);
-            mDeivceToken= String.valueOf(tbRestClient.getCredentials(device.getId()).getCredentialsId());
+            mDeivceToken= String.valueOf(tbRestClient.getCredentials(device.getId().getId()).getCredentialsId());
             saveData("device_token",mDeivceToken);
             Intent intent=new Intent("HTTP_CONNECTION_MESSAGE");
             intent.putExtra("status", TbRestClient.HTTP_CREATEOK);

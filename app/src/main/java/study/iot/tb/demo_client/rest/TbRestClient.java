@@ -24,7 +24,6 @@ import org.springframework.http.converter.xml.SimpleXmlHttpMessageConverter;
 import org.springframework.http.converter.xml.SourceHttpMessageConverter;
 import org.springframework.util.ClassUtils;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 //import org.thingsboard.server.common.data.Customer;
 //import org.thingsboard.server.common.data.Device;
@@ -44,21 +43,17 @@ import org.springframework.web.client.RestTemplate;
 import study.iot.tb.demo_client.data.Device;
 import study.iot.tb.demo_client.data.DeviceId;
 import study.iot.tb.demo_client.data.DeviceCredentials;
-import java.io.ByteArrayOutputStream;
+
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.function.Supplier;
 //import javax.xml.transform.stax.*;
 
-import javax.security.auth.login.LoginException;
-
+import study.iot.tb.demo_client.data.RPCResponse;
+import study.iot.tb.demo_client.data.ServerResponse;
 import study.iot.tb.demo_client.util.MsgHandler;
 
 public class TbRestClient implements ClientHttpRequestInterceptor{
@@ -74,6 +69,8 @@ public class TbRestClient implements ClientHttpRequestInterceptor{
     public static final int HTTP_NO_TOKEN = 1007;
     public static final int HTTP_CREATEOK = 1008;
     public static final int HTTP_EXIST_DEVICE = 1009;
+    public static final int HTTP_RPC_OK = 1010;
+    public static final int HTTP_RPC_FAILED=1011;
     private ArrayList<MsgHandler> listenerList = new ArrayList<MsgHandler>();
 
     public class LoginToken {
@@ -220,10 +217,6 @@ public class TbRestClient implements ClientHttpRequestInterceptor{
 
     public Device createDevice(Device device,String server_address) {
         baseURL = server_address;
-//        Device device = new Device(name,type);
-        //Device device = new Device();
-//        device.setName(name);
-//        device.setType(type);
         ResponseEntity<Device> deviceInfo = null;
         try {
             deviceInfo = restTemplate.postForEntity(baseURL + "/api/device", device, Device.class);
@@ -344,6 +337,73 @@ public class TbRestClient implements ClientHttpRequestInterceptor{
         if (!listenerList.contains(msgHandler)) {
             listenerList.add(msgHandler);
         }
+    }
+
+    public RPCResponse sendRPC(String deviceToken,String server_address) {
+        baseURL = server_address+"/api/v1/"+deviceToken+"/rpc";
+        Map<String, String> RPCRequest = new HashMap<>();
+        RPCRequest.put("method", "getTime");
+        RPCRequest.put("params", "{}");
+        ResponseEntity<RPCResponse> rpcRequestResponse = null;
+        try {
+            rpcRequestResponse = restTemplate.postForEntity(baseURL, RPCRequest, RPCResponse.class);
+        } catch (HttpClientErrorException e) {
+            e.printStackTrace();
+            HttpStatus errorCode=e.getStatusCode();
+            if (errorCode == HttpStatus.BAD_REQUEST) {
+                dispachEvent(HTTP_RPC_FAILED);
+                Log.i(TAG, "Bad Request");
+                return null;
+            } else if (errorCode == HttpStatus.UNAUTHORIZED) {
+                dispachEvent(HTTP_NO_TOKEN);
+                Log.i(TAG, "createDevice:No login token or token out of date,pls login first.");
+                return null;
+            }else{
+                Log.i(TAG, "error code="+errorCode);
+                return null;
+            }
+        }
+        HttpStatus responseCode = rpcRequestResponse.getStatusCode();
+        if (responseCode == HttpStatus.OK) {
+            Log.i(TAG, "sendRPC=="+ rpcRequestResponse.getBody().getTime());
+            dispachEvent(HTTP_RPC_OK);
+            return rpcRequestResponse.getBody();
+        }
+        return null;
+    }
+
+    public ServerResponse sendServerRPC(String deviceId, String server_address,String callType) {
+        baseURL = server_address+"/api/plugins/rpc/"+callType+"/"+deviceId;
+        Map<String, String> ServerRPCRequest = new HashMap<>();
+        ServerRPCRequest.put("method", "setGpio");
+        ServerRPCRequest.put("params", "{\"pin\": \"23\",\n" +
+                "    \"value\": 1}");
+        ResponseEntity<ServerResponse> serverResponseResponseEntity = null;
+        try {
+            serverResponseResponseEntity = restTemplate.postForEntity(baseURL, ServerRPCRequest, ServerResponse.class);
+        } catch (HttpClientErrorException e) {
+            e.printStackTrace();
+            HttpStatus errorCode=e.getStatusCode();
+            if (errorCode == HttpStatus.BAD_REQUEST) {
+                dispachEvent(HTTP_RPC_FAILED);
+                Log.i(TAG, "Bad Request");
+                return null;
+            } else if (errorCode == HttpStatus.UNAUTHORIZED) {
+                dispachEvent(HTTP_NO_TOKEN);
+                Log.i(TAG, "No login token or token out of date,pls login first.");
+                return null;
+            }else{
+                Log.i(TAG, "error code="+errorCode);
+                return null;
+            }
+        }
+        HttpStatus responseCode = serverResponseResponseEntity.getStatusCode();
+        if (responseCode == HttpStatus.OK) {
+            //Log.i(TAG, "sendRPC=="+ serverResponseResponseEntity.getBody().getMethod());
+            dispachEvent(HTTP_RPC_OK);
+            return serverResponseResponseEntity.getBody();
+        }
+        return null;
     }
 
 

@@ -15,10 +15,14 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.springframework.web.client.RestClientException;
 //import org.thingsboard.server.common.data.Device;
 import study.iot.tb.demo_client.data.Device;
+import study.iot.tb.demo_client.data.RPCResponse;
+import study.iot.tb.demo_client.data.ServerResponse;
 import study.iot.tb.demo_client.rest.TbRestClient;
 import study.iot.tb.demo_client.util.MsgHandler;
 import study.iot.tb.demo_client.mqtt.MqttUtil;
 import study.iot.tb.demo_client.util.CommonParams;
+
+import static study.iot.tb.demo_client.rest.TbRestClient.HTTP_RPC_OK;
 
 
 public class DemoService extends Service {
@@ -41,6 +45,9 @@ public class DemoService extends Service {
 
     private TbRestClient tbRestClient;
     private Device device;
+    private RPCResponse rpcResponse;
+    private ServerResponse serverResponse;
+    private String time;
 
     @Nullable
     @Override
@@ -125,12 +132,7 @@ public class DemoService extends Service {
     private MsgHandler msgHandler_rest = new MsgHandler() {
         @Override
         public void onMessage(String type, MqttMessage data) {
-//            data_info=data.toString();
-//            Intent intent=new Intent("MQTT_CONNECTION_MESSAGE");
-//            intent.putExtra("type_info", type);
-//            intent.putExtra("data_info", data_info);
-//            intent.putExtra("status", MqttUtil.MQTT_MSG);
-//            sendBroadcast(intent);
+
         }
 
         @Override
@@ -157,6 +159,8 @@ public class DemoService extends Service {
                 case TbRestClient.HTTP_EXIST_DEVICE:
                     Log.i(TAG, "device exist");
                     break;
+                case TbRestClient.HTTP_RPC_OK:
+                    Log.i(TAG, "rpc ok");
                 default:
                     break;
             }
@@ -169,12 +173,14 @@ public class DemoService extends Service {
     private MsgHandler msgHandler_mqtt = new MsgHandler() {
         @Override
         public void onMessage(String type, MqttMessage data) {
+            Log.i(TAG, "onMessage: ==================");
             data_info=data.toString();
             Intent intent=new Intent("MQTT_CONNECTION_MESSAGE");
             intent.putExtra("type_info", type);
             intent.putExtra("data_info", data_info);
             intent.putExtra("status", MqttUtil.MQTT_MSG);
-            sendBroadcast(intent);
+            LocalBroadcastManager localBroadcastManager=LocalBroadcastManager.getInstance(getBaseContext());
+            localBroadcastManager.sendBroadcast(intent);
         }
 
         @Override
@@ -238,8 +244,8 @@ public class DemoService extends Service {
     }
 
     public void createDevice(String name, String type,String server_address){
-        SharedPreferences token_info = getSharedPreferences("tokenInfo", MODE_PRIVATE);
-        mLoginToken=token_info.getString("login_token", "");
+        //SharedPreferences token_info = getSharedPreferences("tokenInfo", MODE_PRIVATE);
+        //mLoginToken=token_info.getString("login_token", "");
         //String link_address= server_address.substring(0,25)+"/api/device";
         if(name==""){
             name = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
@@ -263,6 +269,62 @@ public class DemoService extends Service {
             localBroadcastManager.sendBroadcast(intent);
         }
     }
+
+    public void sendClientRPC(String server_address){
+        SharedPreferences device_info = getSharedPreferences("deviceInfo", MODE_PRIVATE);
+        mDeivceToken=device_info.getString("device_token", "");
+        if (mDeivceToken ==null) {
+            Log.i(TAG, "sendRPC: token is null");
+        }
+        else{
+            rpcResponse=tbRestClient.sendRPC(mDeivceToken,server_address);
+        }
+
+        if(rpcResponse!=null){
+            time= String.valueOf(rpcResponse.getTime());
+            Log.i(TAG, "time===="+time);
+            Intent intent=new Intent("HTTP_CONNECTION_MESSAGE");
+            intent.putExtra("status", HTTP_RPC_OK);
+            intent.putExtra("time",time);
+            LocalBroadcastManager localBroadcastManager=LocalBroadcastManager.getInstance(getBaseContext());
+            localBroadcastManager.sendBroadcast(intent);
+        }
+    }
+
+    public void sendServerRPC(String server_address,String deviceId,String callType){
+        serverResponse=tbRestClient.sendServerRPC(deviceId,server_address,callType);
+        if(serverResponse!=null){
+            String method= String.valueOf(serverResponse.getMethod());
+            String params=String.valueOf(serverResponse.getParams());
+            Log.i(TAG, "method===="+method);
+            Log.i(TAG, "params===="+params);
+            Intent intent=new Intent("HTTP_CONNECTION_MESSAGE");
+            intent.putExtra("status", HTTP_RPC_OK);
+            intent.putExtra("method",method);
+            intent.putExtra("params",params);
+            LocalBroadcastManager localBroadcastManager=LocalBroadcastManager.getInstance(getBaseContext());
+            localBroadcastManager.sendBroadcast(intent);
+        }
+    }
+
+    public void uploadAttribute(){
+        String upload_topic="v1/devices/me/attributes";
+        String message="{\"attribute1\":\"value1\", \"attribute2\":true, \"attribute3\":42.0, \"attribute4\":73}";
+        mqttUtil.publish(upload_topic,message.getBytes(),1);
+    }
+
+    public void requestAttribute(){
+        String request_topic="v1/devices/me/attributes/request/1";
+        String request_message="{\"clientKeys\":\"attribute3,attribute4\", \"sharedKeys\":\"shared1,shared2\"}";
+        mqttUtil.subscribe("v1/devices/me/attributes/response/+");
+        mqttUtil.publish(request_topic,request_message.getBytes(),1);
+    }
+
+    public void subscribeAttribute(){
+        mqttUtil.subscribe("v1/devices/me/attributes");
+    }
+
+
 
 
 }

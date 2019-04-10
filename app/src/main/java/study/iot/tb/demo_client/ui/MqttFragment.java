@@ -35,6 +35,9 @@ public class MqttFragment extends TabFragments {
     private Button mConnect_button;
     private Button mPublish_button;
     private Button mSusbscribe_button;
+    private Button mUpload_attribute_button;
+    private Button mRequest_attribute_button;
+    private Button mSubscribe_attribute_button;
     private RadioGroup radioGroup;
     private RadioButton radioButton;
     public String mDeivceToken;
@@ -87,17 +90,22 @@ public class MqttFragment extends TabFragments {
         radioGroup=view.findViewById(R.id.radio_group);
         radioButton=view.findViewById(radioGroup.getCheckedRadioButtonId());
         mSubscribeTopic_edittext=view.findViewById(R.id.subscribe_text);
+        mUpload_attribute_button=view.findViewById(R.id.upload_attribute_button);
+        mRequest_attribute_button=view.findViewById(R.id.request_attribute_button);
+        mSubscribe_attribute_button=view.findViewById(R.id.subscribe_attribute_button);
         mqttUtil = new MqttUtil(this.getContext());
         SharedPreferences token_info = this.getContext().getSharedPreferences("deviceInfo", MODE_PRIVATE);
         mDeviceId= token_info.getString("device_id","");
         mDeivceToken=token_info.getString("device_token", "");
-        mDeviceid_edittext.setText(mDeviceId);
-        mUsername_edittext.setText(mDeivceToken);
+        //mDeviceid_edittext.setText(mDeviceId);
+        //mUsername_edittext.setText(mDeivceToken);
         mPassword_edittext.setText("");
         mService = ((MainActivity) getActivity()).demoService;
         String data1="{ \"key\":\"ca_application\",\"value\":\"{\\\"lon\\\":123" +
                 ",\\\"lat\\\":456"+"}\"}";
-        mPublishPayload_edittext.setText(data1);
+        String data2="{ \"method\":\"setGpio\",\"params\":\"{\\\"pin\\\":123" +
+                ",\\\"value\\\":456"+"}\"}";
+        mPublishPayload_edittext.setText(data2);
 
 
         radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
@@ -154,6 +162,57 @@ public class MqttFragment extends TabFragments {
                         @Override
                         public void run() {
                             mqttSubscribe();
+                        }
+                    }).start();
+
+                }
+            }
+        });
+
+        mUpload_attribute_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!mIsMqttConnected) {
+                    mResponse_textview.setText("mqtt disconnect,pls connect first");
+                } else {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mService.uploadAttribute();
+                        }
+                    }).start();
+
+                }
+            }
+        });
+
+        mRequest_attribute_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!mIsMqttConnected) {
+                    mResponse_textview.setText("mqtt disconnect,pls connect first");
+                } else {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mService.requestAttribute();
+                        }
+                    }).start();
+
+                }
+            }
+        });
+
+        mSubscribe_attribute_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!mIsMqttConnected) {
+                    mResponse_textview.setText("mqtt disconnect,pls connect first");
+                } else {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mService.subscribeAttribute();
                         }
                     }).start();
 
@@ -259,6 +318,7 @@ public class MqttFragment extends TabFragments {
                 mResponse_textview.setText("mqtt subscribed failed");
                 break;
             case MqttUtil.MQTT_MSG:
+                Log.i(TAG, "------------------");
                 String type = "type:" + intent.getStringExtra("type_info");
                 String msg = "message:" + intent.getStringExtra("data_info");
                 mResponse_textview.setText(type + "\n" + msg);

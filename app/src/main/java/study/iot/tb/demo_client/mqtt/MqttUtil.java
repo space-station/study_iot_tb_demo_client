@@ -74,6 +74,10 @@ public class MqttUtil {
             public void messageArrived(String topic, MqttMessage message) throws Exception {
                 Log.i(TAG, "message arrived, topic:" + topic + "  content:" + message);
                 dispachMessage(topic, message);
+                if(topic.contains("rpc")){
+                    String requestId= topic.substring("v1/devices/me/rpc/request/".length());
+                    mqttClient.publish("v1/devices/me/rpc/response/" + requestId, message);
+                }
             }
 
             @Override

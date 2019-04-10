@@ -7,10 +7,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 
 import study.iot.tb.demo_client.R;
+import study.iot.tb.demo_client.mqtt.MqttUtil;
 import study.iot.tb.demo_client.rest.TbRestClient;
 import study.iot.tb.demo_client.service.DemoService;
 
@@ -26,6 +28,9 @@ public class RestFragment extends TabFragments {
     private TextView mResponse_textView;
     private Button mLogin_button;
     private Button mCreateDevice_button;
+    private Button mSendClientRPC_button;
+    private Button mSendServerRPC_button;
+    private CheckBox mTwoWay_checkbox;
     private String loginToken="";
     public String mDeviceId;
     public String mDeivceToken;
@@ -36,6 +41,7 @@ public class RestFragment extends TabFragments {
     private String mServer_address;
     private String mDeviceName;
     private String mDeviceType;
+    private String callType;
     public DemoService mService;
 
     public View onCreateView(LayoutInflater inflater,ViewGroup container,Bundle savedInstanceState){
@@ -50,6 +56,10 @@ public class RestFragment extends TabFragments {
         mDeviceName_editText=view.findViewById(R.id.device_name_edittext);
         mDeviceType_editText=view.findViewById(R.id.type_edittext);
         mRequest_body_editText=view.findViewById(R.id.request_body_edittext);
+        mSendClientRPC_button=view.findViewById(R.id.client_button);
+        mSendServerRPC_button=view.findViewById(R.id.server_button);
+        mTwoWay_checkbox=view.findViewById(R.id.twoway_checkbox);
+
         String data1="{ \"Date\":\"today\",\"Time\":\"{\\\"Hour\\\":12" +
                 ",\\\"Minutes\\\":56"+"}\"}";
         mRequest_body_editText.setText(data1);
@@ -94,8 +104,48 @@ public class RestFragment extends TabFragments {
                 }).start();
             }
         });
+
+
+        mSendClientRPC_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        DemoService service = getService();
+                        if (service != null) {
+                            mService.sendClientRPC(mServer_address);
+                        }
+                    }
+                }).start();
+            }
+        });
+
+        mSendServerRPC_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        DemoService service = getService();
+                        if (service != null) {
+                            if(mTwoWay_checkbox.isChecked()){
+                                callType="twoway";
+                            }else{
+                                callType="oneway";
+                            }
+
+                            mService.sendServerRPC(mServer_address,String.valueOf(mDevice_id_editText.getText()),callType);
+                        }
+                    }
+                }).start();
+            }
+        });
+
         return view;
     }
+
+
 
 
     @Override
@@ -117,11 +167,23 @@ public class RestFragment extends TabFragments {
                 mResponse_textView.setText("No Login Token!");
                 break;
             case TbRestClient.HTTP_CREATEOK:
-                mResponse_textView.setText("create device succ,deviceId="+intent.getStringExtra("deviceId"));
-
+                mResponse_textView.setText("create device succ,deviceId="+intent.getStringExtra("deviceId")+"token="+intent.getStringExtra("device_token"));
                 break;
             case TbRestClient.HTTP_EXIST_DEVICE:
                 mResponse_textView.setText("device exist");
+                break;
+            case TbRestClient.HTTP_RPC_OK:
+                String method=intent.getStringExtra("method");
+                String params=intent.getStringExtra("params");
+                if(method!=null&&params!=null){
+                    mResponse_textView.setText("method="+method+"\n"+"params="+params);
+                }
+                else{
+                    mResponse_textView.setText("200 ok");
+                }
+                break;
+            case TbRestClient.HTTP_RPC_FAILED:
+                mResponse_textView.setText("Bad request");
                 break;
         }
     }
